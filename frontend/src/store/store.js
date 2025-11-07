@@ -4,6 +4,7 @@ import cartReducer from "./cartSlice"
 import menuReducer from "./menuSlice"
 import orderReducer from "./orderSlice"
 import adminReducer from "./adminSlice"
+import couponReducer from "./couponSlice"
 import { authApi } from "./authApi";
 import { foodItemsApi } from "./foodItemsApi";
 import { ordersApi } from "./ordersApi";
@@ -17,6 +18,7 @@ export const store = configureStore({
     menu: menuReducer,
     order: orderReducer,
     admin: adminReducer,
+    coupons: couponReducer,
     [authApi.reducerPath]: authApi.reducer,
     [foodItemsApi.reducerPath]: foodItemsApi.reducer,
     [ordersApi.reducerPath]: ordersApi.reducer,
