@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import SectionHeader from '../../Common/SectionHeader';
 import Datepicker from 'react-tailwindcss-datepicker';
+import axiosInstance from '../../../api/axiosInstance';
 
 const BookingForm = () => {
   const [value, setValue] = useState({
@@ -42,45 +43,40 @@ const BookingForm = () => {
     const reservationDate = value.startDate;
 
     const formSubmission = {
-      ...formData,
+      name: formData.name,
+      email: formData.email,
       reservationDate: reservationDate || formData.reservationDate,
+      totalPeople: parseInt(formData.totalPeople),
+      message: formData.message,
     };
 
     try {
-      const response = await fetch("https://formspree.io/f/xgegevnr", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(formSubmission)
-      });
+      const response = await axiosInstance.post('/reservations', formSubmission);
 
-      if (response.ok) {
-        setStatus({ submitted: true, success: true, error: false });
-        setFormData({
-          name: '',
-          email: '',
-          reservationDate: '',
-          totalPeople: '',
-          message: '',
-        });
-        setValue({ startDate: null, endDate: null });
-      } else {
-        setStatus({ submitted: true, success: false, error: true });
-      }
+      setStatus({ submitted: true, success: true, error: false });
+      setFormData({
+        name: '',
+        email: '',
+        reservationDate: '',
+        totalPeople: '',
+        message: '',
+      });
+      setValue({ startDate: null, endDate: null });
     } catch (error) {
+      console.error('Error submitting reservation:', error);
       setStatus({ submitted: true, success: false, error: true });
     }
   };
 
   return (
-    <div className="bg-booking bg-cover   text-white  pt-6 pb-14 ">
+    <div className="bg-[url('/background/table.jpg')] bg-cover bg-center text-white pt-6 pb-14">
       <div className="container mx-auto wrapper">
         <SectionHeader inspirationWord={"Book Now"} title={"BOOK YOUR TABLE"} />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form data-aos="slideInLeft" onSubmit={handleSubmit} className="space-y-4">
           <div className="grid md:grid-cols-2 grid-cols-1 gap-4">
             <input
+              data-aos="fadeIn"
               type="text"
               name="name"
               placeholder="Your Name *"
@@ -90,6 +86,7 @@ const BookingForm = () => {
               required
             />
             <input
+              data-aos="fadeIn"
               type="email"
               name="email"
               placeholder="Your Email"
@@ -102,6 +99,7 @@ const BookingForm = () => {
 
           <div className="grid md:grid-cols-2 grid-cols-1 gap-4">
             <Datepicker
+              data-aos="fadeIn"
               value={value}
               onChange={(newValue) => setValue(newValue)}
               inputClassName={`w-full input pl-10 text-black ${value.startDate ? 'bg-[#e8f0ff]' : 'bg-transparent'}`}
@@ -109,6 +107,7 @@ const BookingForm = () => {
             />
 
             <input
+              data-aos="fadeIn"
               type="number"
               name="totalPeople"
               placeholder="Total People"
@@ -120,6 +119,7 @@ const BookingForm = () => {
           </div>
 
           <textarea
+            data-aos="fadeIn"
             name="message"
             placeholder="Message"
             value={formData.message}
@@ -129,6 +129,7 @@ const BookingForm = () => {
           />
 
           <button
+            data-aos="bounceIn"
             type="submit"
             className="w-fit bg-yellow-500 text-black px-4 py-3 font-semibold hover:bg-yellow-600 transition duration-300"
           >
