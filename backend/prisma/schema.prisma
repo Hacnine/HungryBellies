@@ -114,15 +114,3 @@ model Address {
   @@index([userId])
 }
 
-model Reservation {
-  id              String   @id @map("_id") @default(auto()) @db.ObjectId
-  name            String
-  email           String
-  reservationDate DateTime
-  totalPeople     Int
-  message         String?
-  status          String   @default("pending") // pending, confirmed, cancelled
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-
