@@ -68,7 +68,7 @@ function CheckoutFormContent({ orderId, amount, onSuccess }) {
       <button
         type="submit"
         disabled={!stripe || loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 rounded-lg transition"
+        className="w-full bg-checkout-yellow hover:bg-yellow-400 disabled:bg-gray-400 text-black font-semibold py-3 rounded-lg transition"
       >
         {loading ? "Processing..." : `Pay $${amount.toFixed(2)}`}
       </button>

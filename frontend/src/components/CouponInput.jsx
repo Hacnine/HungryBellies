@@ -19,7 +19,7 @@ export function CouponInput({ orderTotal, onApply }) {
 
   return (
     <div className="p-4 border rounded-lg">
-      <h3 className="font-semibold mb-3">Apply Coupon Code</h3>
+      <h3 className="font-medium mb-3">Apply Coupon Code</h3>
       <div className="flex gap-2">
         <input
           type="text"
@@ -32,7 +32,7 @@ export function CouponInput({ orderTotal, onApply }) {
         <button
           onClick={handleApply}
           disabled={loading || !!applied}
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400"
+          className="px-4 py-2 bg-checkout-yellow text-black rounded hover:bg-yellow-400 disabled:bg-gray-400"
         >
           {applied ? "Applied" : "Apply"}
         </button>

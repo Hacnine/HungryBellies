@@ -32,7 +32,7 @@ export default function CheckoutPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center animate__animated animate__fadeIn">
         <div className="text-center animate__animated animate__zoomIn">
           <h1 className="text-2xl font-bold mb-4">Cart is empty</h1>
-          <button onClick={() => navigate("/")} className="bg-blue-600 text-white px-6 py-2 rounded-lg">
+          <button onClick={() => navigate("/")} className="bg-checkout-yellow text-black px-6 py-2 rounded-lg hover:bg-yellow-400 transition">
             Continue Shopping
           </button>
         </div>
@@ -95,7 +95,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 animate__animated animate__fadeIn">
       <div className="max-w-4xl mx-auto px-4">
-        <h1 className="text-3xl font-bold mb-8 animate__animated animate__bounceIn">Checkout</h1>
+        <h1 className="text-3xl font-semibold mb-8 animate__animated animate__bounceIn">Checkout</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Order Summary */}
@@ -103,7 +103,7 @@ export default function CheckoutPage() {
             {!showPayment ? (
               <>
                 <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                  <h2 className="text-xl font-bold mb-4">Order Summary</h2>
+                  <h2 className="text-xl font-semibold mb-4">Order Summary</h2>
                   <div className="space-y-2 mb-4">
                     {items.map((item) => (
                       <div key={item.id} className="flex justify-between text-gray-700">
@@ -115,7 +115,7 @@ export default function CheckoutPage() {
                     ))}
                   </div>
                   <div className="border-t pt-4">
-                    <div className="flex justify-between text-lg font-bold">
+                    <div className="flex justify-between text-lg font-semibold">
                       <span>Subtotal:</span>
                       <span>${total.toFixed(2)}</span>
                     </div>
@@ -128,7 +128,7 @@ export default function CheckoutPage() {
                 {!user && (
                   <div className="bg-white rounded-lg shadow-md p-6 mb-6">
                     <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-xl font-bold">Order as Guest</h2>
+                      <h2 className="text-xl font-semibold">Order as Guest</h2>
                       <button
                         onClick={() => navigate('/login')}
                         className="text-blue-600 hover:text-blue-800 text-sm underline"
@@ -176,7 +176,7 @@ export default function CheckoutPage() {
 
                 {/* Delivery Info */}
                 <div className="bg-white rounded-lg shadow-md p-6 mt-6">
-                  <h2 className="text-xl font-bold mb-4">Delivery Information</h2>
+                  <h2 className="text-xl font-semibold mb-4">Delivery Information</h2>
                   <form onSubmit={handlePlaceOrder} className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Address</label>
@@ -218,7 +218,7 @@ export default function CheckoutPage() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 rounded-lg transition"
+                      className="w-full bg-checkout-yellow hover:bg-yellow-400 disabled:bg-gray-400 text-black font-semibold py-3 rounded-lg transition"
                     >
                       {loading ? "Placing Order..." : "Continue to Payment"}
                     </button>
@@ -227,7 +227,7 @@ export default function CheckoutPage() {
               </>
             ) : (
               <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-bold mb-4">Payment</h2>
+                <h2 className="text-xl font-semibold mb-4">Payment</h2>
                 <CheckoutForm orderId={selectedOrder.id} amount={finalTotal} onSuccess={handlePaymentSuccess} />
               </div>
             )}
@@ -235,7 +235,7 @@ export default function CheckoutPage() {
 
           {/* Order Total */}
           <div className="bg-white rounded-lg shadow-md p-6 h-fit sticky top-8 animate__animated animate__slideInRight">
-            <h3 className="text-lg font-bold mb-4">Order Total</h3>
+            <h3 className="text-lg font-semibold mb-4">Order Total</h3>
             <div className="space-y-2 text-gray-700 mb-4">
               <div className="flex justify-between">
                 <span>Subtotal:</span>
@@ -257,7 +257,7 @@ export default function CheckoutPage() {
               )}
             </div>
             <div className="border-t pt-4">
-              <div className="flex justify-between text-lg font-bold text-blue-600">
+              <div className="flex justify-between text-lg font-semibold text-blue-600">
                 <span>Total:</span>
                 <span>${finalTotal.toFixed(2)}</span>
               </div>

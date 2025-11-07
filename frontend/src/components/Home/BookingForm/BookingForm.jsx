@@ -69,7 +69,7 @@ const BookingForm = () => {
   };
 
   return (
-    <div className="bg-[url('/background/table.jpg')] bg-cover bg-center text-white pt-6 pb-14">
+    <div className="bg-[url('/background/table.png')] bg-cover bg-center text-white pt-6 pb-14">
       <div className="container mx-auto wrapper">
         <SectionHeader inspirationWord={"Book Now"} title={"BOOK YOUR TABLE"} />
 
