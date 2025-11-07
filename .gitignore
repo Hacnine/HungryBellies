@@ -8,7 +8,6 @@ lerna-debug.log*
 
 # Build outputs
 /build
-/frontend
 /dist
 /out
 .next/
