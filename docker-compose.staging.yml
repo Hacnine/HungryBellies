@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  api:
+    image: ${DOCKER_REGISTRY}/food-delivery-app:staging
+    container_name: food_delivery_api_staging
+    restart: unless-stopped
+    ports:
+      - '4000:4000'
+    environment:
+      NODE_ENV: staging
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      FRONTEND_ORIGIN: https://staging.fooddelivery.com
+      PORT: 4000
+    depends_on:
+      - mongo
+      - redis
+    volumes:
+      - ./backend/.env.staging:/app/backend/.env
+
+  mongo:
+    image: mongo:6
+    container_name: food_delivery_mongo_staging
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    environment:
+      MONGO_INITDB_DATABASE: food_delivery_staging
+    volumes:
+      - mongo-staging-data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    container_name: food_delivery_redis_staging
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-staging-data:/data
+
+volumes:
+  mongo-staging-data:
+  redis-staging-data:

@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @map("_id") @default(auto()) @db.ObjectId
+  name       String
+  email      String   @unique
+  password   String
+  role       String   @default("user")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Order {
+  id         String   @id @map("_id") @default(auto()) @db.ObjectId
+  userId     String   @db.ObjectId
+  items      Json
+  total      Float
+  status     String   @default("placed")
+  steps      Json
+  coupons    Json?
+  paid       Boolean  @default(false)
+  driverId   String?  @db.ObjectId
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Driver {
+  id         String   @id @map("_id") @default(auto()) @db.ObjectId
+  name       String
+  email      String   @unique
+  phone      String
+  vehicle    String?
+  licensePlate String?
+  rating     Float    @default(5.0)
+  available  Boolean  @default(true)
+  currentOrderId String? @db.ObjectId
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Menu {
+  id         String   @id @map("_id") @default(auto()) @db.ObjectId
+  name       String
+  description String?
+  price      Float
+  image      String?
+  category   String
+  available  Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Coupon {
+  id            String   @id @map("_id") @default(auto()) @db.ObjectId
+  code          String   @unique
+  description   String?
+  discountType  String   @default("PERCENTAGE") // PERCENTAGE or FIXED
+  discountValue Float
+  maxUses       Int?
+  usedCount     Int      @default(0)
+  expiresAt     DateTime?
+  minOrderValue Float    @default(0)
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

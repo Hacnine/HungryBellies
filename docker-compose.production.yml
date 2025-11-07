@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  api:
+    image: ${DOCKER_REGISTRY}/food-delivery-app:latest
+    container_name: food_delivery_api_prod
+    restart: always
+    ports:
+      - '4000:4000'
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: ${DATABASE_URL}
+      REDIS_URL: ${REDIS_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      FRONTEND_ORIGIN: https://fooddelivery.com
+      PORT: 4000
+    depends_on:
+      - mongo
+      - redis
+    volumes:
+      - ./backend/.env.production:/app/backend/.env
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  mongo:
+    image: mongo:6
+    container_name: food_delivery_mongo_prod
+    restart: always
+    environment:
+      MONGO_INITDB_DATABASE: food_delivery
+    volumes:
+      - mongo-prod-data:/data/db
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+  redis:
+    image: redis:7-alpine
+    container_name: food_delivery_redis_prod
+    restart: always
+    volumes:
+      - redis-prod-data:/data
+    logging:
+      driver: json-file
+      options:
+        max-size: '10m'
+        max-file: '3'
+
+volumes:
+  mongo-prod-data:
+  redis-prod-data:
