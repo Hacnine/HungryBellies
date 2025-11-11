@@ -3,68 +3,312 @@ import bcryptjs from "bcryptjs"
 
 const prisma = new PrismaClient()
 
+// Helper function to generate referral code
+function generateReferralCode(name) {
+  return name.toUpperCase().replace(/\s/g, '').slice(0, 4) + Math.random().toString(36).slice(2, 6).toUpperCase()
+}
+
 async function seed() {
   try {
-    console.log("Seeding database...")
+    console.log("🌱 Starting database seed...")
 
-    // Clear existing data
+    // Clear existing data in correct order (reverse of creation dependencies)
+    console.log("🧹 Cleaning existing data...")
+    await prisma.analytics.deleteMany()
+    await prisma.driverEarning.deleteMany()
+    await prisma.favoriteRestaurant.deleteMany()
+    await prisma.promotion.deleteMany()
+    await prisma.loyaltyTransaction.deleteMany()
+    await prisma.walletTransaction.deleteMany()
+    await prisma.notification.deleteMany()
+    await prisma.review.deleteMany()
+    await prisma.inventory.deleteMany()
+    await prisma.deliveryZone.deleteMany()
     await prisma.coupon.deleteMany()
     await prisma.order.deleteMany()
     await prisma.menu.deleteMany()
     await prisma.foodItem.deleteMany()
     await prisma.driver.deleteMany()
+    await prisma.restaurant.deleteMany()
+    await prisma.address.deleteMany() // Delete addresses before users
     await prisma.user.deleteMany()
+    console.log("✅ Cleaned existing data")
 
-    // Create admin user
+    console.log("✅ Cleaned existing data")
+
+    // ==================== CREATE USERS ====================
+    console.log("\n👥 Creating users...")
     const adminPassword = await bcryptjs.hash("admin123", 10)
     const admin = await prisma.user.create({
       data: {
         name: "Admin User",
-        email: "admin@fooddelivery.com",
+        email: "admin@hungrybelly.com",
         password: adminPassword,
         role: "admin",
+        phone: "555-0000",
+        loyaltyPoints: 0,
+        loyaltyTier: "Bronze",
+        walletBalance: 0,
+        referralCode: generateReferralCode("Admin"),
       },
     })
-    console.log("Created admin user:", admin.email)
+    console.log("✓ Created admin:", admin.email)
 
-    // Create test user
-    const userPassword = await bcryptjs.hash("user123", 10)
-    const user = await prisma.user.create({
-      data: {
-        name: "Test User",
-        email: "user@fooddelivery.com",
-        password: userPassword,
-        role: "user",
-      },
-    })
-    console.log("Created test user:", user.email)
-
-    // Create menu items
-    const categories = ["Burgers", "Pizza", "Salads", "Desserts", "Drinks"]
-    const menuItems = [
-      { name: "Classic Burger", description: "Beef burger with cheese", price: 8.99, category: "Burgers" },
-      { name: "Double Burger", description: "Double patty burger", price: 10.99, category: "Burgers" },
-      { name: "Margherita Pizza", description: "Classic tomato and cheese", price: 12.99, category: "Pizza" },
-      { name: "Pepperoni Pizza", description: "Pepperoni and cheese", price: 13.99, category: "Pizza" },
-      { name: "Caesar Salad", description: "Fresh romaine and croutons", price: 7.99, category: "Salads" },
-      { name: "Chocolate Cake", description: "Homemade chocolate cake", price: 5.99, category: "Desserts" },
-      { name: "Coca Cola", description: "Cold soft drink", price: 2.49, category: "Drinks" },
-    ]
-
-    for (const item of menuItems) {
-      await prisma.menu.create({
+    // Create restaurant owners
+    const ownerPassword = await bcryptjs.hash("owner123", 10)
+    const owners = await Promise.all([
+      prisma.user.create({
         data: {
-          name: item.name,
-          description: item.description,
-          price: item.price,
-          category: item.category,
-          available: true,
+          name: "Mario Rossi",
+          email: "mario@restaurants.com",
+          password: ownerPassword,
+          role: "restaurant_owner",
+          phone: "555-1001",
+          loyaltyPoints: 0,
+          loyaltyTier: "Bronze",
+          walletBalance: 5000,
+          referralCode: generateReferralCode("Mario Rossi"),
         },
-      })
-    }
-    console.log("Created", menuItems.length, "menu items")
+      }),
+      prisma.user.create({
+        data: {
+          name: "Chen Wei",
+          email: "chen@restaurants.com",
+          password: ownerPassword,
+          role: "restaurant_owner",
+          phone: "555-1002",
+          loyaltyPoints: 0,
+          loyaltyTier: "Bronze",
+          walletBalance: 3500,
+          referralCode: generateReferralCode("Chen Wei"),
+        },
+      }),
+      prisma.user.create({
+        data: {
+          name: "Maria Garcia",
+          email: "maria@restaurants.com",
+          password: ownerPassword,
+          role: "restaurant_owner",
+          phone: "555-1003",
+          loyaltyPoints: 0,
+          loyaltyTier: "Bronze",
+          walletBalance: 4200,
+          referralCode: generateReferralCode("Maria Garcia"),
+        },
+      }),
+    ])
+    console.log("✓ Created restaurant owners:", owners.length)
 
-    // Create detailed food items with images
+    // Create regular users with varying loyalty tiers
+    const userPassword = await bcryptjs.hash("user123", 10)
+    const users = await Promise.all([
+      prisma.user.create({
+        data: {
+          name: "John Smith",
+          email: "john@users.com",
+          password: userPassword,
+          role: "user",
+          phone: "555-2001",
+          loyaltyPoints: 2500,
+          loyaltyTier: "Gold",
+          walletBalance: 150.50,
+          referralCode: generateReferralCode("John Smith"),
+          addresses: {
+            create: [
+              {
+                street: "123 Main St",
+                city: "New York",
+                state: "NY",
+                zipCode: "10001",
+                country: "USA",
+                isDefault: true
+              }
+            ]
+          }
+        },
+      }),
+      prisma.user.create({
+        data: {
+          name: "Sarah Johnson",
+          email: "sarah@users.com",
+          password: userPassword,
+          role: "user",
+          phone: "555-2002",
+          loyaltyPoints: 800,
+          loyaltyTier: "Silver",
+          walletBalance: 75.25,
+          referralCode: generateReferralCode("Sarah Johnson"),
+          addresses: {
+            create: [
+              {
+                street: "456 Oak Ave",
+                city: "Los Angeles",
+                state: "CA",
+                zipCode: "90001",
+                country: "USA",
+                isDefault: true
+              }
+            ]
+          }
+        },
+      }),
+      prisma.user.create({
+        data: {
+          name: "Michael Brown",
+          email: "michael@users.com",
+          password: userPassword,
+          role: "user",
+          phone: "555-2003",
+          loyaltyPoints: 150,
+          loyaltyTier: "Bronze",
+          walletBalance: 25.00,
+          referralCode: generateReferralCode("Michael Brown"),
+          addresses: {
+            create: [
+              {
+                street: "789 Elm St",
+                city: "Chicago",
+                state: "IL",
+                zipCode: "60601",
+                country: "USA",
+                isDefault: true
+              }
+            ]
+          }
+        },
+      }),
+    ])
+    console.log("✓ Created users:", users.length)
+
+    // ==================== CREATE RESTAURANTS ====================
+    console.log("\n🍽️ Creating restaurants...")
+    const restaurants = await Promise.all([
+      prisma.restaurant.create({
+        data: {
+          name: "Mario's Italian Kitchen",
+          slug: "marios-italian-kitchen",
+          description: "Authentic Italian cuisine with fresh homemade pasta and wood-fired pizzas. Family recipes passed down through generations!",
+          cuisine: ["Italian", "Pizza", "Pasta"],
+          address: {
+            street: "100 Little Italy Ave",
+            city: "New York",
+            state: "NY",
+            zipCode: "10013",
+            country: "USA"
+          },
+          phone: "555-3001",
+          email: "info@marios.com",
+          ownerId: owners[0].id,
+          rating: 4.7,
+          totalReviews: 328,
+          priceRange: "$$",
+          isActive: true,
+          isVerified: true,
+          operatingHours: {
+            monday: { open: "11:00", close: "22:00", closed: false },
+            tuesday: { open: "11:00", close: "22:00", closed: false },
+            wednesday: { open: "11:00", close: "22:00", closed: false },
+            thursday: { open: "11:00", close: "22:00", closed: false },
+            friday: { open: "11:00", close: "23:00", closed: false },
+            saturday: { open: "11:00", close: "23:00", closed: false },
+            sunday: { open: "12:00", close: "21:00", closed: false }
+          },
+          deliveryFee: 3.99,
+          minOrderAmount: 15.00,
+          maxDeliveryDistance: 5.0,
+          avgDeliveryTime: 37, // 30-45 min average
+          logo: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&q=80",
+          coverImage: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=1200&q=80",
+          tags: ["Italian", "Pizza", "Pasta", "Family Friendly"],
+          isOpen: true
+        },
+      }),
+      prisma.restaurant.create({
+        data: {
+          name: "Dragon Wok",
+          slug: "dragon-wok",
+          description: "Modern Chinese restaurant specializing in Sichuan and Cantonese dishes. Experience authentic flavors with a contemporary twist!",
+          cuisine: ["Chinese", "Asian", "Noodles"],
+          address: {
+            street: "200 Chinatown Blvd",
+            city: "San Francisco",
+            state: "CA",
+            zipCode: "94108",
+            country: "USA"
+          },
+          phone: "555-3002",
+          email: "hello@dragonwok.com",
+          ownerId: owners[1].id,
+          rating: 4.5,
+          totalReviews: 256,
+          priceRange: "$$",
+          isActive: true,
+          isVerified: true,
+          operatingHours: {
+            monday: { open: "11:30", close: "22:00", closed: false },
+            tuesday: { open: "11:30", close: "22:00", closed: false },
+            wednesday: { open: "11:30", close: "22:00", closed: false },
+            thursday: { open: "11:30", close: "22:00", closed: false },
+            friday: { open: "11:30", close: "23:00", closed: false },
+            saturday: { open: "11:30", close: "23:00", closed: false },
+            sunday: { open: "11:30", close: "22:00", closed: false }
+          },
+          deliveryFee: 4.99,
+          minOrderAmount: 20.00,
+          maxDeliveryDistance: 5.0,
+          avgDeliveryTime: 42, // 35-50 min average
+          logo: "https://images.unsplash.com/photo-1580612690-16e9df8d2d3f?w=800&q=80",
+          coverImage: "https://images.unsplash.com/photo-1580612690-16e9df8d2d3f?w=1200&q=80",
+          tags: ["Chinese", "Spicy", "Noodles", "Authentic"],
+          isOpen: true
+        },
+      }),
+      prisma.restaurant.create({
+        data: {
+          name: "Taco Fiesta",
+          slug: "taco-fiesta",
+          description: "Vibrant Mexican street food with house-made tortillas, fresh salsas, and premium meats. Every bite is a fiesta!",
+          cuisine: ["Mexican", "Street Food", "Tacos"],
+          address: {
+            street: "300 Mission St",
+            city: "Los Angeles",
+            state: "CA",
+            zipCode: "90012",
+            country: "USA"
+          },
+          phone: "555-3003",
+          email: "hola@tacofiesta.com",
+          ownerId: owners[2].id,
+          rating: 4.8,
+          totalReviews: 412,
+          priceRange: "$",
+          isActive: true,
+          isVerified: true,
+          operatingHours: {
+            monday: { open: "10:00", close: "22:00", closed: false },
+            tuesday: { open: "10:00", close: "22:00", closed: false },
+            wednesday: { open: "10:00", close: "22:00", closed: false },
+            thursday: { open: "10:00", close: "22:00", closed: false },
+            friday: { open: "10:00", close: "23:30", closed: false },
+            saturday: { open: "10:00", close: "23:30", closed: false },
+            sunday: { open: "10:00", close: "21:00", closed: false }
+          },
+          deliveryFee: 2.99,
+          minOrderAmount: 12.00,
+          maxDeliveryDistance: 5.0,
+          avgDeliveryTime: 30, // 25-35 min average
+          logo: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800&q=80",
+          coverImage: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=1200&q=80",
+          tags: ["Mexican", "Tacos", "Street Food", "Spicy"],
+          isOpen: true
+        },
+      }),
+    ])
+    console.log("✓ Created restaurants:", restaurants.length)
+    console.log("✓ Created restaurants:", restaurants.length)
+
+    // ==================== CREATE FOOD ITEMS ====================
+    console.log("\n🍔 Creating food items...")
     const foodItems = [
       // Burgers
       {
@@ -521,55 +765,178 @@ async function seed() {
       }
     ];
 
-    // Get admin user ID for createdBy field
-    const adminUser = await prisma.user.findUnique({
-      where: { email: "admin@fooddelivery.com" }
-    });
-
-    for (const item of foodItems) {
+    // Assign food items to restaurants
+    for (let i = 0; i < foodItems.length; i++) {
+      const restaurantId = i < 5 ? restaurants[0].id : i < 10 ? restaurants[1].id : restaurants[2].id
+      const ownerId = i < 5 ? owners[0].id : i < 10 ? owners[1].id : owners[2].id
       await prisma.foodItem.create({
         data: {
-          ...item,
-          createdBy: adminUser.id,
-          shop: null
+          ...foodItems[i],
+          restaurantId,
+          createdBy: ownerId,
+          isVegetarian: foodItems[i].category === "Salads",
+          isVegan: false,
+          isGlutenFree: false,
+          isHalal: false
         }
-      });
-    }
-    console.log("Created", foodItems.length, "food items with detailed information")
-
-    // Create drivers
-    const drivers = [
-      {
-        name: "John Driver",
-        email: "john@drivers.com",
-        phone: "555-0001",
-        vehicle: "Honda Civic",
-        licensePlate: "ABC123",
-      },
-      {
-        name: "Jane Driver",
-        email: "jane@drivers.com",
-        phone: "555-0002",
-        vehicle: "Toyota Prius",
-        licensePlate: "XYZ789",
-      },
-    ]
-
-    for (const driver of drivers) {
-      await prisma.driver.create({
-        data: {
-          name: driver.name,
-          email: driver.email,
-          phone: driver.phone,
-          vehicle: driver.vehicle,
-          licensePlate: driver.licensePlate,
-          available: true,
-        },
       })
     }
-    console.log("Created", drivers.length, "drivers")
+    console.log("✓ Created food items:", foodItems.length)
 
-    // Create coupons
+    console.log("✓ Created food items:", foodItems.length)
+
+    // ==================== CREATE DRIVERS ====================
+    console.log("\n🚗 Creating drivers...")
+    const drivers = await Promise.all([
+      prisma.driver.create({
+        data: {
+          name: "James Wilson",
+          email: "james@drivers.com",
+          phone: "555-4001",
+          vehicle: "Honda Civic 2020",
+          licensePlate: "ABC123",
+          driverLicense: "DL123456",
+          available: true,
+          currentLocation: { lat: 40.7128, lng: -74.0060 },
+          rating: 4.8,
+          totalOrders: 245,
+          totalEarnings: 3250.50
+        },
+      }),
+      prisma.driver.create({
+        data: {
+          name: "Emily Davis",
+          email: "emily@drivers.com",
+          phone: "555-4002",
+          vehicle: "Toyota Prius 2021",
+          licensePlate: "XYZ789",
+          driverLicense: "DL789012",
+          available: true,
+          currentLocation: { lat: 40.7589, lng: -73.9851 },
+          rating: 4.9,
+          totalOrders: 312,
+          totalEarnings: 4120.75
+        },
+      }),
+      prisma.driver.create({
+        data: {
+          name: "David Martinez",
+          email: "david@drivers.com",
+          phone: "555-4003",
+          vehicle: "Ford Focus 2019",
+          licensePlate: "DEF456",
+          driverLicense: "DL345678",
+          available: false,
+          currentLocation: { lat: 40.7480, lng: -73.9862 },
+          rating: 4.7,
+          totalOrders: 198,
+          totalEarnings: 2680.25
+        },
+      }),
+    ])
+    console.log("✓ Created drivers:", drivers.length)
+
+    // ==================== CREATE DELIVERY ZONES ====================
+    console.log("\n📍 Creating delivery zones...")
+    const zones = await Promise.all([
+      prisma.deliveryZone.create({
+        data: {
+          name: "Downtown Manhattan",
+          code: "MANHATTAN_DT",
+          city: "New York",
+          boundaries: {
+            type: "Polygon",
+            coordinates: [[
+              [-74.0060, 40.7128],
+              [-73.9851, 40.7589],
+              [-73.9855, 40.7580],
+              [-74.0060, 40.7128]
+            ]]
+          },
+          center: { latitude: 40.7358, longitude: -73.9958 },
+          deliveryFee: 3.99,
+          isActive: true
+        }
+      }),
+      prisma.deliveryZone.create({
+        data: {
+          name: "Chinatown SF",
+          code: "SF_CHINATOWN",
+          city: "San Francisco",
+          boundaries: {
+            type: "Polygon",
+            coordinates: [[
+              [-122.4194, 37.7749],
+              [-122.4079, 37.7937],
+              [-122.4100, 37.7900],
+              [-122.4194, 37.7749]
+            ]]
+          },
+          center: { latitude: 37.7833, longitude: -122.4125 },
+          deliveryFee: 4.99,
+          isActive: true
+        }
+      })
+    ])
+    console.log("✓ Created delivery zones:", zones.length)
+
+    // ==================== CREATE PROMOTIONS ====================
+    console.log("\n🎉 Creating promotions...")
+    const promotions = await Promise.all([
+      prisma.promotion.create({
+        data: {
+          title: "Weekend Special - 30% Off!",
+          description: "Get 30% off on all orders above $30 this weekend only!",
+          promoCode: "WEEKEND30",
+          discountType: "percentage",
+          discountValue: 30,
+          minOrderAmount: 30,
+          maxDiscount: 15,
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+          isActive: true,
+          totalMaxUses: 500,
+          usedCount: 142
+        }
+      }),
+      prisma.promotion.create({
+        data: {
+          title: "First Order Bonus",
+          description: "New users get $10 off on their first order!",
+          promoCode: "FIRST10",
+          discountType: "fixed",
+          discountValue: 10,
+          minOrderAmount: 20,
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          isActive: true,
+          totalMaxUses: 1000,
+          usedCount: 523,
+          targetUserTier: ["All"]
+        }
+      }),
+      prisma.promotion.create({
+        data: {
+          title: "Mario's Special - Free Delivery",
+          description: "Free delivery on all orders from Mario's Italian Kitchen!",
+          promoCode: "MARIOFREE",
+          discountType: "free_delivery",
+          discountValue: 0,
+          minOrderAmount: 15,
+          restaurantId: restaurants[0].id,
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
+          isActive: true,
+          totalMaxUses: 300,
+          usedCount: 87
+        }
+      })
+    ])
+    console.log("✓ Created promotions:", promotions.length)
+    console.log("✓ Created promotions:", promotions.length)
+
+    // ==================== CREATE COUPONS (old system) ====================
+    console.log("\n🎫 Creating coupons...")
     const coupons = [
       {
         code: "WELCOME10",
@@ -577,6 +944,8 @@ async function seed() {
         discountType: "PERCENTAGE",
         discountValue: 10,
         minOrderValue: 15,
+        maxUses: 100,
+        active: true
       },
       {
         code: "SAVE15",
@@ -584,28 +953,392 @@ async function seed() {
         discountType: "PERCENTAGE",
         discountValue: 15,
         minOrderValue: 50,
+        maxUses: 200,
+        active: true
       },
-      { code: "FLAT5", description: "$5 off your order", discountType: "FIXED", discountValue: 5, minOrderValue: 20 },
+      { 
+        code: "FLAT5", 
+        description: "$5 off your order", 
+        discountType: "FIXED", 
+        discountValue: 5, 
+        minOrderValue: 20,
+        maxUses: 150,
+        active: true
+      }
     ]
 
     for (const coupon of coupons) {
       await prisma.coupon.create({
-        data: {
-          code: coupon.code,
-          description: coupon.description,
-          discountType: coupon.discountType,
-          discountValue: coupon.discountValue,
-          minOrderValue: coupon.minOrderValue,
-          maxUses: 100,
-          active: true,
-        },
+        data: coupon
       })
     }
-    console.log("Created", coupons.length, "coupons")
+    console.log("✓ Created coupons:", coupons.length)
 
-    console.log("Database seeded successfully!")
+    // ==================== CREATE SAMPLE ORDERS ====================
+    console.log("\n📦 Creating sample orders...")
+
+    // First, get the addresses for each user
+    const userAddresses = await Promise.all([
+      prisma.address.findFirst({ where: { userId: users[0].id, isDefault: true } }),
+      prisma.address.findFirst({ where: { userId: users[1].id, isDefault: true } }),
+      prisma.address.findFirst({ where: { userId: users[2].id, isDefault: true } })
+    ])
+
+    const orders = await Promise.all([
+      // Completed order
+      prisma.order.create({
+        data: {
+          orderNumber: `ORD-${Date.now()}-1`,
+          userId: users[0].id,
+          restaurantId: restaurants[0].id,
+          items: [
+            {
+              foodItemId: "item1",
+              name: "Margherita Pizza",
+              quantity: 2,
+              price: 14.99,
+              specialInstructions: "Extra cheese please"
+            }
+          ],
+          subtotal: 29.98,
+          deliveryFee: 3.99,
+          tax: 2.70,
+          discount: 0,
+          total: 36.67,
+          status: "delivered",
+          paymentStatus: "paid",
+          paymentMethod: "card",
+          deliveryAddress: userAddresses[0],
+          driverId: drivers[0].id,
+          estimatedDeliveryTime: new Date(Date.now() - 2 * 60 * 60 * 1000),
+          actualDeliveryTime: new Date(Date.now() - 1 * 60 * 60 * 1000),
+          steps: [
+            { step: "placed", timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000), message: "Order placed" },
+            { step: "confirmed", timestamp: new Date(Date.now() - 2.5 * 60 * 60 * 1000), message: "Restaurant confirmed" },
+            { step: "preparing", timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), message: "Preparing your order" },
+            { step: "ready", timestamp: new Date(Date.now() - 1.5 * 60 * 60 * 1000), message: "Order ready for pickup" },
+            { step: "picked_up", timestamp: new Date(Date.now() - 1.25 * 60 * 60 * 1000), message: "Driver picked up" },
+            { step: "on_the_way", timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000), message: "On the way to you" },
+            { step: "delivered", timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000), message: "Delivered" }
+          ]
+        }
+      }),
+      // Active order
+      prisma.order.create({
+        data: {
+          orderNumber: `ORD-${Date.now()}-2`,
+          userId: users[1].id,
+          restaurantId: restaurants[1].id,
+          items: [
+            {
+              foodItemId: "item2",
+              name: "BBQ Chicken Pizza",
+              quantity: 1,
+              price: 16.99
+            },
+            {
+              foodItemId: "item3",
+              name: "Caesar Salad",
+              quantity: 1,
+              price: 9.99
+            }
+          ],
+          subtotal: 26.98,
+          deliveryFee: 4.99,
+          tax: 2.88,
+          discount: 0,
+          total: 34.85,
+          status: "in_transit",
+          paymentStatus: "paid",
+          paymentMethod: "wallet",
+          deliveryAddress: userAddresses[1],
+          driverId: drivers[1].id,
+          estimatedDeliveryTime: new Date(Date.now() + 30 * 60 * 1000),
+          steps: [
+            { step: "placed", timestamp: new Date(), message: "Order placed" },
+            { step: "confirmed", timestamp: new Date(Date.now() + 5 * 60 * 1000), message: "Restaurant confirmed" },
+            { step: "preparing", timestamp: new Date(Date.now() + 10 * 60 * 1000), message: "Preparing your order" },
+            { step: "ready", timestamp: new Date(Date.now() + 15 * 60 * 1000), message: "Order ready for pickup" },
+            { step: "picked_up", timestamp: new Date(Date.now() + 20 * 60 * 1000), message: "Driver picked up" },
+            { step: "on_the_way", timestamp: new Date(Date.now() + 25 * 60 * 1000), message: "On the way to you" }
+          ]
+        }
+      }),
+      // Pending order
+      prisma.order.create({
+        data: {
+          orderNumber: `ORD-${Date.now()}-3`,
+          userId: users[2].id,
+          restaurantId: restaurants[2].id,
+          items: [
+            {
+              foodItemId: "item4",
+              name: "Classic Burger",
+              quantity: 3,
+              price: 12.99
+            }
+          ],
+          subtotal: 38.97,
+          deliveryFee: 2.99,
+          tax: 3.78,
+          discount: 0,
+          total: 45.74,
+          status: "placed",
+          paymentStatus: "paid",
+          paymentMethod: "card",
+          deliveryAddress: userAddresses[2],
+          estimatedDeliveryTime: new Date(Date.now() + 45 * 60 * 1000),
+          steps: [
+            { step: "placed", timestamp: new Date(), message: "Order placed" }
+          ]
+        }
+      })
+    ])
+    console.log("✓ Created orders:", orders.length)
+
+    // ==================== CREATE REVIEWS ====================
+    console.log("\n⭐ Creating reviews...")
+    const reviews = await Promise.all([
+      prisma.review.create({
+        data: {
+          userId: users[0].id,
+          restaurantId: restaurants[0].id,
+          orderId: orders[0].id,
+          rating: 5,
+          comment: "Absolutely fantastic! The pizza was fresh and delicious. Best Italian food in the city!",
+          isHelpful: 12
+        }
+      }),
+      prisma.review.create({
+        data: {
+          userId: users[1].id,
+          restaurantId: restaurants[1].id,
+          rating: 4,
+          comment: "Great food and fast delivery. The noodles were authentic and flavorful.",
+          isHelpful: 8
+        }
+      }),
+      prisma.review.create({
+        data: {
+          userId: users[0].id,
+          driverId: drivers[0].id,
+          orderId: orders[0].id,
+          rating: 5,
+          comment: "Very professional driver. Food arrived hot and on time!",
+          isHelpful: 5
+        }
+      })
+    ])
+    console.log("✓ Created reviews:", reviews.length)
+
+    // ==================== CREATE WALLET TRANSACTIONS ====================
+    console.log("\n💰 Creating wallet transactions...")
+    await Promise.all([
+      prisma.walletTransaction.create({
+        data: {
+          userId: users[0].id,
+          type: "credit",
+          amount: 100,
+          balanceBefore: 50.50,
+          balanceAfter: 150.50,
+          description: "Added money to wallet",
+          status: "completed"
+        }
+      }),
+      prisma.walletTransaction.create({
+        data: {
+          userId: users[0].id,
+          type: "cashback",
+          amount: 3.67,
+          balanceBefore: 146.83,
+          balanceAfter: 150.50,
+          orderId: orders[0].id,
+          description: "Cashback from order",
+          status: "completed"
+        }
+      }),
+      prisma.walletTransaction.create({
+        data: {
+          userId: users[1].id,
+          type: "debit",
+          amount: 34.85,
+          balanceBefore: 110.10,
+          balanceAfter: 75.25,
+          orderId: orders[1].id,
+          description: "Payment for order",
+          status: "completed"
+        }
+      })
+    ])
+    console.log("✓ Created wallet transactions")
+
+    // ==================== CREATE LOYALTY TRANSACTIONS ====================
+    console.log("\n🏆 Creating loyalty transactions...")
+    await Promise.all([
+      prisma.loyaltyTransaction.create({
+        data: {
+          userId: users[0].id,
+          type: "earned",
+          pointsEarned: 37,
+          pointsRedeemed: 0,
+          pointsBalance: 2537,
+          description: "Points earned from order",
+          orderId: orders[0].id
+        }
+      }),
+      prisma.loyaltyTransaction.create({
+        data: {
+          userId: users[0].id,
+          type: "earned",
+          pointsEarned: 500,
+          pointsRedeemed: 0,
+          pointsBalance: 3037,
+          description: "Referral bonus"
+        }
+      }),
+      prisma.loyaltyTransaction.create({
+        data: {
+          userId: users[1].id,
+          type: "redeemed",
+          pointsEarned: 0,
+          pointsRedeemed: 200,
+          pointsBalance: 600,
+          description: "Redeemed for $2 discount",
+          orderId: orders[1].id
+        }
+      })
+    ])
+    console.log("✓ Created loyalty transactions")
+
+    // ==================== CREATE NOTIFICATIONS ====================
+    console.log("\n🔔 Creating notifications...")
+    await Promise.all([
+      prisma.notification.create({
+        data: {
+          userId: users[0].id,
+          type: "order_update",
+          title: "Order Delivered!",
+          message: "Your order has been successfully delivered. Enjoy your meal!",
+          data: { orderId: orders[0].id },
+          isRead: true
+        }
+      }),
+      prisma.notification.create({
+        data: {
+          userId: users[1].id,
+          type: "order_update",
+          title: "Driver is on the way",
+          message: "Your order is out for delivery. Track your driver in real-time!",
+          data: { orderId: orders[1].id, driverId: drivers[1].id },
+          isRead: false
+        }
+      }),
+      prisma.notification.create({
+        data: {
+          userId: users[0].id,
+          type: "promotion",
+          title: "Weekend Special - 30% Off!",
+          message: "Use code WEEKEND30 to get 30% off on your next order!",
+          data: { promoCode: "WEEKEND30" },
+          isRead: false
+        }
+      })
+    ])
+    console.log("✓ Created notifications")
+
+    // ==================== CREATE FAVORITES ====================
+    console.log("\n❤️ Creating favorite restaurants...")
+    await Promise.all([
+      prisma.favoriteRestaurant.create({
+        data: {
+          userId: users[0].id,
+          restaurantId: restaurants[0].id
+        }
+      }),
+      prisma.favoriteRestaurant.create({
+        data: {
+          userId: users[0].id,
+          restaurantId: restaurants[1].id
+        }
+      }),
+      prisma.favoriteRestaurant.create({
+        data: {
+          userId: users[1].id,
+          restaurantId: restaurants[2].id
+        }
+      })
+    ])
+    console.log("✓ Created favorite restaurants")
+
+    // ==================== CREATE DRIVER EARNINGS ====================
+    console.log("\n💵 Creating driver earnings...")
+    await Promise.all([
+      prisma.driverEarning.create({
+        data: {
+          driverId: drivers[0].id,
+          orderId: orders[0].id,
+          baseEarning: 5.00,
+          tip: 3.00,
+          bonus: 0,
+          totalEarning: 8.00,
+          platformFee: 1.60,
+          netEarning: 6.40
+        }
+      }),
+      prisma.driverEarning.create({
+        data: {
+          driverId: drivers[1].id,
+          orderId: orders[1].id,
+          baseEarning: 6.00,
+          tip: 4.50,
+          bonus: 1.50,
+          totalEarning: 12.00,
+          platformFee: 2.40,
+          netEarning: 9.60
+        }
+      })
+    ])
+    console.log("✓ Created driver earnings")
+
+    // ==================== CREATE ANALYTICS ====================
+    console.log("\n📊 Creating analytics data...")
+    await prisma.analytics.create({
+      data: {
+        date: new Date(),
+        period: "daily",
+        totalRevenue: 117.26,
+        totalOrders: 3,
+        avgOrderValue: 39.09,
+        activeUsers: 3,
+        activeRestaurants: 3,
+        activeDrivers: 2,
+        topRestaurants: [
+          { restaurantId: restaurants[0].id, name: "Mario's Italian Kitchen", revenue: 36.67, orders: 1 },
+          { restaurantId: restaurants[1].id, name: "Dragon Wok", revenue: 34.85, orders: 1 },
+          { restaurantId: restaurants[2].id, name: "Taco Fiesta", revenue: 45.74, orders: 1 }
+        ]
+      }
+    })
+    console.log("✓ Created analytics data")
+
+    console.log("\n🎉 Database seeded successfully!")
+    console.log("\n📋 Summary:")
+    console.log(`   Users: ${users.length + owners.length + 1} (1 admin, ${owners.length} owners, ${users.length} customers)`)
+    console.log(`   Restaurants: ${restaurants.length}`)
+    console.log(`   Food Items: ${foodItems.length}`)
+    console.log(`   Drivers: ${drivers.length}`)
+    console.log(`   Orders: ${orders.length}`)
+    console.log(`   Reviews: ${reviews.length}`)
+    console.log(`   Promotions: ${promotions.length}`)
+    console.log(`   Coupons: ${coupons.length}`)
+    console.log("\n🔐 Login Credentials:")
+    console.log(`   Admin: admin@hungrybelly.com / admin123`)
+    console.log(`   Owner: mario@restaurants.com / owner123`)
+    console.log(`   User: john@users.com / user123`)
+    console.log(`   Driver: james@drivers.com / driver123`)
+
   } catch (error) {
-    console.error("Error seeding database:", error)
+    console.error("❌ Error seeding database:", error)
     process.exit(1)
   } finally {
     await prisma.$disconnect()
