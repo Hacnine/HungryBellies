@@ -14,6 +14,11 @@ import driverRoutes from "./routes/drivers.js"
 import couponRoutes from "./routes/coupons.js"
 import foodItemRoutes from "./routes/foodItems.js"
 import addressRoutes from "./routes/addresses.js"
+import restaurantRoutes from "./routes/restaurants.js"
+import reviewRoutes from "./routes/reviews.js"
+import notificationRoutes from "./routes/notifications.js"
+import walletRoutes from "./routes/wallet.js"
+import loyaltyRoutes from "./routes/loyalty.js"
 import {
   emitOrderUpdate,
   emitDriverLocation,
@@ -51,6 +56,11 @@ app.use("/drivers", driverRoutes)
 app.use("/coupons", couponRoutes)
 app.use("/food-items", foodItemRoutes)
 app.use("/addresses", addressRoutes)
+app.use("/restaurants", restaurantRoutes)
+app.use("/reviews", reviewRoutes)
+app.use("/notifications", notificationRoutes)
+app.use("/wallet", walletRoutes)
+app.use("/loyalty", loyaltyRoutes)
 
 app.get("/health", (req, res) => res.json({ ok: true }))
 
